@@ -5,9 +5,11 @@ using lln.Network.netTasks;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using UnityEngine;
 using System.Text;
+using System.Threading;
 using lln.ChuDaDi_MainLogic;
 using lln.Network.client;
 using Newtonsoft.Json;
@@ -267,6 +269,25 @@ public class FrontManager : MonoBehaviour
 
     public void JumpOut(){
         SceneManager.LoadScene("001_login");
+
+        Thread thread = new Thread(addToDatabase);
+        thread.Start();
+    }
+
+    private void addToDatabase(){
+        //finishJson
+        FinishPlayer[] players = JsonConvert.DeserializeObject<FinishPlayer[]>(finishJson);
+
+        for (int i = 0; i < players.Length; i++){
+            string request = "http://8.134.143.81:8080/put/point?name=" + players[i].name + "&point=" +
+                             players[i].score;
+            
+            using (HttpClient client = new HttpClient()){
+                string responseBody = client.GetStringAsync(request).Result;
+                Debug.Log(responseBody);
+            }
+            
+        }
     }
 
     private string GetLocalIPAddress()
