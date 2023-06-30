@@ -23,6 +23,8 @@ namespace lln.ChuDaDi_MainLogic
             Game.instance = game;
         }
 
+        
+
         public string getCurrIp()
         {
             return game.getCurrIp();

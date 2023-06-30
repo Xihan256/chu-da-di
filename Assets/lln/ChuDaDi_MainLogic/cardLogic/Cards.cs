@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using lln.ChuDaDi_MainLogic.Utils;
 
 
@@ -37,18 +36,10 @@ namespace lln.ChuDaDi_MainLogic.cardLogic{
         }
 
         public static Card findMax(List<Card> cards){
-            int index = -1;
-            int peekPoint = 0,peekSuit = 0;
+            int index = 0;
             for (int i = 0; i < cards.Count; i++){
-                if (cards[i].point > peekPoint){
-                    peekPoint = cards[i].point;
-                    peekSuit = cards[i].suit;
+                if (cards[i].greaterThan(cards[index])){
                     index = i;
-                }else if (cards[i].point == peekPoint){
-                    if (cards[i].suit > peekSuit){
-                        peekSuit = cards[i].suit;
-                        index = i;
-                    }
                 }
             }
 

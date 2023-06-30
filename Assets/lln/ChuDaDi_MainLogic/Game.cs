@@ -43,6 +43,15 @@ namespace lln.ChuDaDi_MainLogic
             currentRule = rulesMap[CardGroup.EVERYTHING];
         }
 
+        public void setPlayerName(string name, string ip){
+            for (int i = 0; i < players.Length; i++){
+                if (players[i].ip.Equals(ip)){
+                    players[i].name = name;
+                    break;
+                }
+            }
+        }
+
         public void wakeUp()
         {
             List<Card> cards = new List<Card>();
@@ -58,6 +67,7 @@ namespace lln.ChuDaDi_MainLogic
 
             for (int i = 0; i < 4; i++){
                 Debug.Log(players[i].ip);
+                Debug.Log(players[i].name);
             }
 
 
@@ -79,8 +89,6 @@ namespace lln.ChuDaDi_MainLogic
                 players[3].addCard(cards[i + 39]);
             }
 
-            players[0].sortCards();
-            players[1].sortCards();
             for (int i = 0; i < 4; i++)
             {
                 players[i].sortCards();

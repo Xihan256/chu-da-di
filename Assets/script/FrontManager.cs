@@ -11,6 +11,7 @@ using System.Text;
 using lln.ChuDaDi_MainLogic;
 using lln.Network.client;
 using Newtonsoft.Json;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class FrontManager : MonoBehaviour
@@ -28,6 +29,7 @@ public class FrontManager : MonoBehaviour
     public GameObject skipBtn;
     public GameObject ErrText;
     public GameObject startBtn;
+    public GameObject finishCanv;
     //task???
     public GameObject cardPrefab;
     public GameObject showPrefab;
@@ -39,9 +41,11 @@ public class FrontManager : MonoBehaviour
     public bool skipN=false;
     public bool showN=false;
     public bool roundN = false;
+    public bool finishN = false;
     public string initJson;
     public string skipIp;
     public string showJson;
+    public string finishJson;
     
 
     private void Start()
@@ -69,6 +73,11 @@ public class FrontManager : MonoBehaviour
             roundN = false;
             UpRound();
         }
+
+        if (finishN){
+            finishN = false;
+            SeccessfulFinish(finishJson);
+        }
     }
 
     public string GetIP
@@ -87,6 +96,7 @@ public class FrontManager : MonoBehaviour
         } else{
             GameObject server = GameObject.Find("Server");
             GameObject.DestroyImmediate(server);
+            
         }
         showBtn.SetActive(true);
         skipBtn.SetActive(true);
@@ -121,6 +131,7 @@ public class FrontManager : MonoBehaviour
 
         initN = false;
     }
+    
 
     //??????
     public void UpRound()
@@ -175,13 +186,7 @@ public class FrontManager : MonoBehaviour
         GameObject showObj = Instantiate(showPrefab);
         showObj.GetComponent<ShowCards>().workToDo(groupJson);
         GameObject.Destroy(showObj, 2.0f);
-        //?????????????????????
-        if (group.cards.Count == selfPlayer.GetComponent<ViewCards>().GetCards.Count)
-        {
-            GameObject finObj = Instantiate(finPrefab);
-            finObj.GetComponent<FinishGame>().WorkToDo();
-            GameObject.Destroy(finObj, 2.0f);
-        }
+
         DownRound();
     }
 
@@ -196,6 +201,12 @@ public class FrontManager : MonoBehaviour
             List<ViewCard> temp = selfPlayer.GetComponent<ViewCards>().removeCal_Show();
             selfPlayer.GetComponent<CardsToShow>().clearCards();
             gameObject.GetComponent<CardsOnTable>().ShowOut(temp);
+            if (selfPlayer.GetComponent<ViewCards>().GetCards.Count == 0)
+            {
+                GameObject finObj = Instantiate(finPrefab);
+                finObj.GetComponent<FinishGame>().WorkToDo();
+                GameObject.Destroy(finObj, 2.0f);
+            }
         } else if(right.GetComponent<OtherPlayerControl>().GetIP==ip){
             right.GetComponent<OtherPlayerControl>().ShowOut(group.cards,Vector3.left * delMutiplier);
         }
@@ -240,6 +251,22 @@ public class FrontManager : MonoBehaviour
         }
 
         skipN = false;
+    }
+
+    public void SeccessfulFinish(string json){
+        finishCanv.SetActive(true);
+        FinishPlayer[] players = JsonConvert.DeserializeObject<FinishPlayer[]>(json);
+
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < players.Length; i++){
+            sb.Append(players[i].name + " :\t" + players[i].score + "\n");
+        }
+        finishCanv.transform.GetChild(0).GetChild(0).GetComponent<Text>().text = sb.ToString();
+    }
+
+    public void JumpOut(){
+        SceneManager.LoadScene("001_login");
     }
 
     private string GetLocalIPAddress()

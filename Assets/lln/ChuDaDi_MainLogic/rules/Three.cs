@@ -10,14 +10,12 @@ namespace lln.ChuDaDi_MainLogic.rules
                 return false;
             }
             
-            if (group.cards[0].point > currentGroup.cards[0].point){
-                return true;
-            } else{
-                Card groupMax = Cards.findMax(group.cards);
-                Card currentGroupMax = Cards.findMax(currentGroup.cards);
+            
+            Card groupMax = Cards.findMax(group.cards);
+            Card currentGroupMax = Cards.findMax(currentGroup.cards);
 
-                return groupMax.greaterThan(currentGroupMax);
-            }
+            return groupMax.greaterThan(currentGroupMax);
+            
             
         }
     }

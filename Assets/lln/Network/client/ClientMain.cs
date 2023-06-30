@@ -18,12 +18,19 @@ namespace lln.Network.client{
     public class ClientMain : MonoBehaviour{
         public Socket socket;
         public static string ip;
+        public static string selfname;
         public int port = 11096;
         public FrontManager front;
         public TheBackEnd back;
         public OtherPlayerControl[] others;
         private void Start(){
             Debug.Log(ip);
+        }
+
+        private void addName(Socket s){
+            
+            byte[] bytes = Encoding.UTF8.GetBytes('r' +  selfname + "$" + GetLocalIPAddress());
+            socket.Send(bytes);
         }
 
         public void clientInit(){
@@ -39,6 +46,7 @@ namespace lln.Network.client{
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(IPAddress.Parse(ip), port);
 
+            
             Thread thread = new Thread(runAccept);
             thread.Start(socket);
         }
@@ -46,7 +54,8 @@ namespace lln.Network.client{
         
         public void runAccept(Object o){
             Socket s = (Socket)o;
-            
+            Thread.Sleep(200);
+            addName(s);
             while(true){
                 String receive = processInput(s);
                 Debug.Log(receive);
@@ -119,11 +128,16 @@ namespace lln.Network.client{
                         front.roundN = true;
                     }
 
+                }else if (receive.StartsWith("r")){
+                    receive = receive.Substring(1);
+                    //back.addplayerName(receive);
                 }
                 else if (receive.StartsWith("o"))
                 {
                     receive = receive.Substring(1);
+                    front.finishJson = receive;
                     //todo 前端展示分
+                    front.finishN = true;
                 }else if (receive.Equals("go")){
                     front.roundN = true;
                     //front.UpRound();
@@ -160,15 +174,9 @@ namespace lln.Network.client{
                 else if (receive.Equals("finish"))
                 {
                     string rtn = back.gameFinish();
-                    FinishPlayer[] players = JsonConvert.DeserializeObject<FinishPlayer[]>(rtn);
-
-                    for(int i = 0; i <players.Length; i++)
-                    {
-                        string js = Newtonsoft.Json.JsonConvert.SerializeObject(players[i]);
-                        //processOutput('o' + js, socket);
-                        byte[] bytes = Encoding.UTF8.GetBytes('o' + js);
-                        socket.Send(bytes);
-                    }
+                    byte[] bytes = Encoding.UTF8.GetBytes('o' + rtn);
+                    socket.Send(bytes);
+                    
                 }
                 else
                 {

@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using static lln.ChuDaDi_MainLogic.cardLogic.Card;
 using lln.ChuDaDi_MainLogic.player;
 using UnityEngine;
 using Object = System.Object;
-using lln.ChuDaDi_MainLogic.cardLogic;
-using lln.ChuDaDi_MainLogic.Utils;
 using lln.ChuDaDi_MainLogic;
 
 namespace lln.Network.server{
@@ -53,7 +48,7 @@ namespace lln.Network.server{
                     throw;
                 }
                 sockets.Add(socket);
-                Debug.Log(socket);
+                
                 string guestIP = ((IPEndPoint)socket.RemoteEndPoint).Address.ToString();
                 addPlayer(null , guestIP);//todo 不能是null
                 Debug.Log(guestIP + "add ok");
@@ -165,17 +160,12 @@ namespace lln.Network.server{
                             }
                         }else if (receive.StartsWith("o"))
                         {
-                            receive = receive.Substring(1);
-                            FinishPlayer player = Newtonsoft.Json.JsonConvert.DeserializeObject<FinishPlayer>(receive);
+                            // receive = receive.Substring(1);
+                            // FinishPlayer player = Newtonsoft.Json.JsonConvert.DeserializeObject<FinishPlayer>(receive);
 
                             for (int i = 0; i < sockets.Count; i++)
                             {
-                                IPAddress address = ((IPEndPoint)sockets[i].RemoteEndPoint).Address;
-                                if (address.ToString().Equals(player.ip))
-                                {
-                                    processOutput("o" + player.score, sockets[i]);
-                                    break;
-                                }
+                                processOutput(receive , sockets[i]);
                             }
                         }
                         else if (receive.StartsWith("w"))
@@ -217,6 +207,16 @@ namespace lln.Network.server{
                                     }
                                 }
                             }
+                        }else if (receive.StartsWith("r")){
+                            receive = receive.Substring(1);
+                            
+                            int index = receive.IndexOf("$");
+
+                            string name = receive.Substring(0, index);
+                            string ip = receive.Substring(index + 1);
+            
+                            Game.instance.setPlayerName(name , ip);
+
                         }
                         else if (receive.Equals("no"))
                         {

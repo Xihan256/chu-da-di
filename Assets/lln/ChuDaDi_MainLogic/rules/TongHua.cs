@@ -6,6 +6,11 @@ namespace lln.ChuDaDi_MainLogic.rules
     public class TongHua: Rule
     {
         public bool validate(CardGroup currentGroup, CardGroup group){
+            if (group.type == CardGroup.TONGHUASHUN || group.type == CardGroup.THREE_WITH_PAIR ||
+                group.type == CardGroup.FOUR_WITH_SINGLE){
+                return true;
+            }
+            
             if (group.type != currentGroup.type || group.size != currentGroup.size){
                 return false;
             }

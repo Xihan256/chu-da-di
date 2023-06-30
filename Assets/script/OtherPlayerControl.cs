@@ -1,8 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using lln.ChuDaDi_MainLogic.cardLogic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 public class OtherPlayerControl : MonoBehaviour
 {
@@ -13,6 +15,8 @@ public class OtherPlayerControl : MonoBehaviour
     private int cardnum = 13;
 
     public GameObject cardPrefab;
+
+
 
     public string GetIP
     {
@@ -30,6 +34,16 @@ public class OtherPlayerControl : MonoBehaviour
     {
         handNum = transform.Find("handNum");
         Text = handNum.GetComponent<TextMeshProUGUI>();
+    }
+    
+    private void Update(){
+        if (!name.Equals(transform.GetChild(2).GetComponent<Text>().text)){
+            ShowName();
+        }
+    }
+
+    public void ShowName(){
+        transform.GetChild(2).GetComponent<Text>().text = name;
     }
 
     public void SetNum(int newNum)
