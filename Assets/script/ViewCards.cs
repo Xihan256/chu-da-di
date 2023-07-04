@@ -34,7 +34,7 @@ public class ViewCards : MonoBehaviour
         if (CardsInHand.Contains(card))
         {
             CardsInHand.Remove(card);
-            CardsInHand.Sort();
+            //CardsInHand.Sort();
             PosCalculate();
         }
     }

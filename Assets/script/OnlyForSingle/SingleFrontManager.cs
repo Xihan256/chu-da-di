@@ -1,40 +1,60 @@
+using System;
+using lln.ChuDaDi_MainLogic;
 using lln.ChuDaDi_MainLogic.cardLogic;
 using lln.ChuDaDi_MainLogic.Utils;
+using Newtonsoft.Json;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using lln.ChuDaDi_MainLogic.player;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class SingleFrontManager : MonoBehaviour
 {
     public GameObject backEnd;
+
     public GameObject selfPlayer;
     public GameObject left;
     public GameObject up;
     public GameObject right;
+
+    public GameObject showBtn;
+    public GameObject skipBtn;
+    public GameObject ErrText;
+    public GameObject startBtn;
+    public GameObject finishCanv;
+
     public GameObject cardPrefab;
+    
 
-    private void Start()
-    {
-        
-    }
 
-    //ÓÎÏ·¿ªÊ¼£¬ÆôÓÃÍæ¼ÒÎïÌå
+    //æ¸¸æˆå¼€å§‹ï¼Œå¯ç”¨ç©å®¶ç‰©ä½“
     public void WakeUpPlayer()
     {
-        selfPlayer.SetActive(true);
-        left.SetActive(true);
-        up.SetActive(true);
-        right.SetActive(true);
+        startBtn.SetActive(false);
+        PlayerInit();  
+        backEnd.GetComponent<SingleBackEnd>().startGame();
     }
 
-    //³õÊ¼»¯ÊÖÅÆ
+    private void PlayerInit()
+    {
+        
+        right.GetComponent<OtherPlayerControl>().GetIP = "right";
+        up.GetComponent<OtherPlayerControl>().GetIP = "up";
+        left.GetComponent<OtherPlayerControl>().GetIP = "left";
+    }
+
+    //åˆå§‹åŒ–æ‰‹ç‰Œ
     public void CardInit(string json)
     {
         GameObject vcard;
         ViewCards cards = selfPlayer.GetComponent<ViewCards>();
         Transform pTransform = selfPlayer.transform;
         List<Card> list = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Card>>(json);
-        for (int i = 0; i < list.Count; i++)//Ìí¼ÓÅÆµÄÊµÀı»¯
+        for (int i = 0; i < list.Count; i++)//æ·»åŠ ç‰Œçš„å®ä¾‹åŒ–
         {
             vcard = Instantiate(cardPrefab);
             vcard.name = "Card_" + i;
@@ -49,15 +69,47 @@ public class SingleFrontManager : MonoBehaviour
         }
     }
 
-    //³öÅÆº¯Êı
+    public void UpRound()
+    {
+        Player[] players = Game.instance.players;
+        int[] cards = {players[1].cards.cardsOfPlayer.Count,players[2].cards.cardsOfPlayer.Count,players[3].cards.cardsOfPlayer.Count};
+
+        for (int i = 0; i < 3; i++){
+            Debug.Log("ç‰Œæ•° " + cards[i]);
+        }
+        right.GetComponent<OtherPlayerControl>().TrueSetNum(cards[0]);
+        up.GetComponent<OtherPlayerControl>().TrueSetNum(cards[1]);
+        left.GetComponent<OtherPlayerControl>().TrueSetNum(cards[2]);
+
+        showBtn.GetComponent<Button>().interactable = true;
+        skipBtn.GetComponent<Button>().interactable = true;
+    }
+
+    public void DownRound()
+    {
+        showBtn.GetComponent<Button>().interactable = false;
+        skipBtn.GetComponent<Button>().interactable = false;
+    }
+
+    public void FailTxt()
+    {
+        ErrText.SetActive(true);
+        Invoke("HideFailTxt", 1.5f);
+    }
+    private void HideFailTxt()
+    {
+        ErrText.SetActive(false);
+    }
+
+    //å‡ºç‰Œå‡½æ•°
     public void ShowCard()
     {
-        ViewCards inHand = selfPlayer.GetComponent<ViewCards>();
         CardsToShow toShow = selfPlayer.GetComponent<CardsToShow>();
         if (toShow.GetCardGroup == null)
         {
             return;
         }
+        selfPlayer.GetComponent<ViewCards>().SaveTemp();
         CardGroup group = toShow.Convert("local");
         string groupJson = Newtonsoft.Json.JsonConvert.SerializeObject(group);
         string recv = backEnd.GetComponent<SingleBackEnd>().showCard(groupJson);
@@ -67,13 +119,113 @@ public class SingleFrontManager : MonoBehaviour
         }
         else if (recv.StartsWith("a"))
         {
+            FailTxt();
             return;
         }
         else
         {
-            inHand.removeCal_Show();
+            SeccessfulShow(recv);
+            SingleBackEnd.NextN = true;
+            //åç«¯æé†’ä¸‹ä¸€ä¸ªäººå‡ºç‰Œ
+        }
+
+        DownRound();
+    }
+
+    public void SeccessfulShow(string json)
+    {
+        float delMutiplier = 4f;
+        float delMutiplierUp = 2.3f;
+
+        CardGroup group = JsonConvert.DeserializeObject<CardGroup>(json);
+        string ip = group.ip;
+        
+        
+        if (ip.Equals("local"))
+        {
+            List<ViewCard> temp = selfPlayer.GetComponent<ViewCards>().removeCal_Show();
+            selfPlayer.GetComponent<CardsToShow>().clearCards();
+            gameObject.GetComponent<CardsOnTable>().ShowOut(temp);
+        }
+        else if (right.GetComponent<OtherPlayerControl>().GetIP == ip)
+        {
+            right.GetComponent<OtherPlayerControl>().ShowOut(group.cards, Vector3.left * delMutiplier);
+        }
+        else if (up.GetComponent<OtherPlayerControl>().GetIP == ip)
+        {
+            up.GetComponent<OtherPlayerControl>().ShowOut(group.cards, Vector3.down * delMutiplierUp);
+        }
+        else if (left.GetComponent<OtherPlayerControl>().GetIP == ip)
+        {
+            left.GetComponent<OtherPlayerControl>().ShowOut(group.cards, Vector3.right * delMutiplier);
         }
     }
 
-    
+    public void Skip()
+    {
+        string recv = backEnd.GetComponent<SingleBackEnd>().doNothing();
+        if (recv.StartsWith("a")){
+            FailTxt();
+            return;
+        }
+        else
+        {
+            SeccessfulSkip(recv);
+            SingleBackEnd.NextN = true;
+            //é€šçŸ¥ä¸‹ä¸€ä¸ªäººå‡ºç‰Œ
+        }
+
+        DownRound();
+    }
+
+    public void SeccessfulSkip(string ip)
+    {
+        if ("local".Equals(ip))
+        {
+            //åˆ ä¸Šæ¬¡ç‰Œ
+            foreach (Transform child in transform)
+            {
+                GameObject chi = child.gameObject;
+                // å¯¹æ¯ä¸ªå­ç‰©ä½“è¿›è¡Œæ“ä½œ
+                if (chi.GetComponent<ViewCard>() != null)
+                {
+                    GameObject.Destroy(chi);
+                }
+            }
+            transform.GetChild(0).gameObject.SetActive(true);
+        }
+        else if (right.GetComponent<OtherPlayerControl>().GetIP == ip)
+        {
+            right.GetComponent<OtherPlayerControl>().Skiptxt();
+        }
+        else if (up.GetComponent<OtherPlayerControl>().GetIP == ip)
+        {
+            up.GetComponent<OtherPlayerControl>().Skiptxt();
+        }
+        else if (left.GetComponent<OtherPlayerControl>().GetIP == ip)
+        {
+            left.GetComponent<OtherPlayerControl>().Skiptxt();
+        }
+    }
+
+    public void SeccessfulFinish(string json)
+    {
+        finishCanv.SetActive(true);
+        FinishPlayer[] players = JsonConvert.DeserializeObject<FinishPlayer[]>(json);
+
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            sb.Append(players[i].name + " :\t" + players[i].score + "\n");
+        }
+        finishCanv.transform.GetChild(0).GetChild(0).GetComponent<Text>().text = sb.ToString();
+    }
+
+    public void JumpOut()
+    {
+        SceneManager.LoadScene("001_login");
+    }
+
+
 }

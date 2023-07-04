@@ -12,11 +12,11 @@ namespace lln.ChuDaDi_MainLogic
     public class Game
     {
         public Player[] players; //4
-        private Rule currentRule;
-        private Dictionary<string, Rule> rulesMap;
-        private CardGroup currentGroup;
-        private int currentIndex;
-        private int numOfDoNothing;
+        public Rule currentRule;
+        public Dictionary<string, Rule> rulesMap;
+        public CardGroup currentGroup;
+        public int currentIndex;
+        public int numOfDoNothing;
 
         public static Game instance;
 
@@ -160,8 +160,6 @@ namespace lln.ChuDaDi_MainLogic
                     return false;
                 }
             }
-
-            
             
             bool res = currentRule.validate(currentGroup, group);
             
@@ -180,13 +178,16 @@ namespace lln.ChuDaDi_MainLogic
                 numOfDoNothing = 0;
                 Debug.LogWarning("yes 能出");
             } else{
+                Debug.LogWarning("之前的人出的是" +JsonConvert.SerializeObject(currentGroup));
+                Debug.LogWarning("你试图出的是 " +JsonConvert.SerializeObject(group));
                 Debug.LogWarning("rule的类型是" + currentRule.GetType());
+                
                 Debug.LogWarning("wrong 不能出");
             }
             return res;
         }
 
-        private void changeCurrentPlayer()
+        public void changeCurrentPlayer()
         {
             if (this.currentIndex == 3)
             {
@@ -246,6 +247,15 @@ namespace lln.ChuDaDi_MainLogic
             }
 
             return fplayers;
+        }
+
+        //单人用的
+        public void wakeUpPlayer(string nextManIP){
+            for (int i = 0; i < players.Length; i++){
+                if (players[i].ip.Equals(nextManIP)){
+                    players[i].DoSingle(currentGroup,currentRule);
+                }
+            }
         }
     }
 }

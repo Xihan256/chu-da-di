@@ -163,15 +163,7 @@ public class FrontManager : MonoBehaviour
     {
         ErrText.SetActive(false);
     }
-
-    /*public void go()
-    {
-        Socket socket = GameObject.Find("Client").GetComponent<ClientMain>().socket;
-        
-        byte[] bytes = Encoding.UTF8.GetBytes("ceshi");
-        socket.Send(bytes);
-        
-    }*/
+    
 
     //????
     public void ShowCard()

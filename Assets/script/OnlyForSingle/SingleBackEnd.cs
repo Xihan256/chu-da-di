@@ -12,21 +12,64 @@ using UnityEngine.UI;
 public class SingleBackEnd : MonoBehaviour
 {
     private Game game;
+    private Player[] _players;
+    public static bool NextN;
 
     private void Start()
     {
         game = new Game();
+        Game.instance = game;
+        _players = game.players;
+    }
+
+    private void FixedUpdate(){
+        for (int i = 0; i < _players.Length; i++){
+            if (_players[i] != null && _players[i].cards.cardsOfPlayer.Count == 0){
+                string finish = gameFinish();
+                GameObject.Find("CoreManager").GetComponent<SingleFrontManager>().SeccessfulFinish(finish);
+                break;
+            }
+        }
+
+        if (NextN){
+            NextN = false;
+            wakeUpNext();
+        }
     }
 
     public void startGame()
     {
+        Player player1 = new Player("ZY", "local");
+        Player player2 = new Player("LGX", "right");
+        Player player3 = new Player("LZW", "up");
+        Player player4 = new Player("LLN", "left");
+        game.addPlayer(player1);
+        game.addPlayer(player2);
+        game.addPlayer(player3);
+        game.addPlayer(player4);
+        _players = game.players;
+
+        for (int i = 0; i < _players.Length; i++){
+            Debug.Log(i + _players[i].ip);
+        }
         game.wakeUp();
-        GameObject.Find("CoreManager").GetComponent<SingleFrontManager>().WakeUpPlayer();
+
         string res = game.giveMsgToFrontEnd();
         Player self = JsonConvert.DeserializeObject<Player[]>(res)[0];
         List<Card> cards = self.cards.cardsOfPlayer;
         string s = Newtonsoft.Json.JsonConvert.SerializeObject(cards);
         GameObject.Find("CoreManager").GetComponent<SingleFrontManager>().CardInit(s);
+        wakeUpNext();
+    }
+
+    public void wakeUpNext(){
+        string nextManIP = game.getCurrIp();
+        if (nextManIP.Equals("local")){
+            Debug.Log("来到主家的回合");
+            GameObject.Find("CoreManager").GetComponent<SingleFrontManager>().UpRound();
+        } else{
+            game.wakeUpPlayer(nextManIP);
+        }
     }
 
     public string showCard(string json)
@@ -50,6 +93,8 @@ public class SingleBackEnd : MonoBehaviour
 
     }
 
+    
+
 
 
     public string gameFinish()
@@ -60,16 +105,7 @@ public class SingleBackEnd : MonoBehaviour
 
         return serializeObject;
     }
-
-    public void regist(string name)
-    {
-        //todo
-    }
-
-    public void addAchievement(string achievement)
-    {
-        //todo
-    }
+    
 
 
 
@@ -77,5 +113,19 @@ public class SingleBackEnd : MonoBehaviour
     {
         Player player = new Player(name, ip);
         game.addPlayer(player);
+    }
+
+    public string doNothing(){
+        string lastIP = game.getCurrIp();
+        bool res = game.doNothing();
+
+        if (res)
+        {
+            return lastIP;
+        }
+        else
+        {
+            return "a" + game.getCurrIp();
+        }
     }
 }

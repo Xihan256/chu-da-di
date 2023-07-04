@@ -37,7 +37,7 @@ public class OtherPlayerControl : MonoBehaviour
     }
     
     private void Update(){
-        if (!name.Equals(transform.GetChild(2).GetComponent<Text>().text)){
+        if (name != null && !name.Equals(transform.GetChild(2).GetComponent<Text>().text)){
             ShowName();
         }
     }
@@ -51,8 +51,11 @@ public class OtherPlayerControl : MonoBehaviour
         if(handNum != null){
             cardnum = cardnum - newNum;
             Text.text = cardnum.ToString();
-            Debug.LogWarning("不要多次调用?");
         }
+    }
+
+    public void TrueSetNum(int newNum){
+        Text.text = newNum.ToString();
     }
 
     public void ShowOut(List<Card> cards , Vector3 del){
